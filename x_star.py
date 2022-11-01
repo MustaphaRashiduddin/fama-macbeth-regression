@@ -1,6 +1,5 @@
 # populate w.csv with optimum_weight function
 import numpy as np
-
 # from scipy.integrate import quad
 
 # def left_integrand(s, thetaT, k, theta):
