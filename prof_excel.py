@@ -55,7 +55,7 @@ Vol_Mkt = np.sqrt(CAPM_factor)
 Sigma_CAPM_syst = np.dot(Beta_CAPM, Vol_Mkt)
 Sigma_FF3_syst = np.dot(Beta_FF3, chol_FF3_VC)
 Sigma_MACRO_syst = np.dot(np.dot(Beta_MACRO, chol_MACRO_VC), Beta_MACRO.T)
-#truncating last 5 columns # TODO figure out signaficance of this
+#truncated last 5 columns # TODO BEWARE
 Sigma_MACRO_syst = np.delete(Sigma_MACRO_syst, (5, 6, 7, 8, 9), axis=1)
 
 # =MMULT(MINVERSE(MMULT(V14:X23,TRANSPOSE(V14:X23))+MMULT(AN14:AW23,TRANSPOSE(AN14:AW23))),B36:B45)
