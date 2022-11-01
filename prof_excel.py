@@ -27,7 +27,7 @@ w = load(ws['b19':'b28'])
 # grab sample beta capm, ff3 and macro
 Beta_CAPM = load(ws['o2':'o11'])
 Beta_FF3 = load(ws['o14':'q23'])
-Beta_Macro = load(ws['o26':'s35'])
+Beta_MACRO = load(ws['o26':'s35'])
 
 # grab sample sigma sub epsilon, sub t
 VC_CAPM_idio = load(ws['ac2':'al11'])
@@ -54,7 +54,9 @@ Vol_Mkt = np.sqrt(CAPM_factor)
 # calculate sigma capm, ff3 and macro
 Sigma_CAPM_syst = np.dot(Beta_CAPM, Vol_Mkt)
 Sigma_FF3_syst = np.dot(Beta_FF3, chol_FF3_VC)
-Sigma_MACRO_syst = np.dot(np.dot(Beta_Macro, chol_MACRO_VC), Beta_Macro.T)
+Sigma_MACRO_syst = np.dot(np.dot(Beta_MACRO, chol_MACRO_VC), Beta_MACRO.T)
+#truncating last 5 columns # TODO figure out signaficance of this
+Sigma_MACRO_syst = np.delete(Sigma_MACRO_syst, (5, 6, 7, 8, 9), axis=1)
 
 # =MMULT(MINVERSE(MMULT(V14:X23,TRANSPOSE(V14:X23))+MMULT(AN14:AW23,TRANSPOSE(AN14:AW23))),B36:B45)
 def get_eta(sigma, idio, theta):
@@ -63,22 +65,24 @@ def get_eta(sigma, idio, theta):
 
 eta_capm = get_eta(Sigma_CAPM_syst, chol_vc_capm_idio, theta_CAPM) 
 eta_ff3 = get_eta(Sigma_FF3_syst, chol_vc_ff3_idio, theta_FF3)
-eta_macro = get_eta(Sigma_MACRO_syst, chol_vc_macro_idio, theta_MACRO) #TODO recheck!!
+eta_macro = get_eta(Sigma_MACRO_syst, chol_vc_macro_idio, theta_MACRO)
 
 # calculating systematics
 VC_CAPM_syst = np.dot(np.dot(Beta_CAPM, CAPM_factor), Beta_CAPM.T)
-VC_FF3_syst = np.dot(np.dot(Beta_FF3,  FF3_factors), Beta_FF3.T)
+VC_FF3_syst = np.dot(np.dot(Beta_FF3, FF3_factors), Beta_FF3.T)
+VC_MACRO_syst = np.dot(np.dot(Beta_MACRO, MACRO_factors), Beta_MACRO.T)
 
 #calculating VC
 VC_CAPM = VC_CAPM_syst + VC_CAPM_idio
 VC_FF3 = VC_FF3_syst + VC_FF3_idio
+VC_MACRO = VC_MACRO_syst + VC_MACRO_idio
 
 # calculating b
 b_capm = np.sqrt(np.dot(np.dot(w_bar.T, VC_CAPM), w_bar))
-# b_ff3 = np.sqrt(np.dot(np.dot(w_bar.T, VC_FF3), w_bar)) # TODO comeback later
-b_ff3 = np.array([[0.034], [0], [0]])
-# b_macro =  ws['ba26'].value
-# b_macro = np.array([[0.034], [0], [0], [0], [0]])
+b_ff3_0 = np.sqrt(np.dot(np.dot(w_bar.T, VC_FF3), w_bar))
+b_ff3 = np.array([[b_ff3_0[0][0]], [0], [0]])
+b_macro_0 = np.sqrt(np.dot(np.dot(w_bar.T, VC_MACRO), w_bar))
+b_macro = np.array([[b_macro_0[0][0]], [0], [0], [0], [0]])
 
 # =MMULT(MINVERSE(MMULT(V14:X23,TRANSPOSE(V14:X23))+MMULT(AN14:AW23,TRANSPOSE(AN14:AW23))),
 # MMULT(V14:X23,BA14:BA16))
@@ -88,5 +92,5 @@ def get_pi(sigma, idio, beta):
 
 pi_capm = get_pi(Sigma_CAPM_syst, chol_vc_capm_idio, b_capm)
 pi_ff3 = get_pi(Sigma_FF3_syst, chol_vc_ff3_idio, b_ff3)
-print(pi_ff3)
-# pi_macro = get_pi(Sigma_MACRO_syst, chol_vc_macro_idio, b_macro)
+pi_macro = get_pi(Sigma_MACRO_syst, chol_vc_macro_idio, b_macro)
+print(pi_macro)
