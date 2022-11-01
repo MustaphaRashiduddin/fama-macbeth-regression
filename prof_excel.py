@@ -4,7 +4,6 @@ from openpyxl import load_workbook
 wb = load_workbook("rnd.xlsx", read_only=True)
 ws = wb.active
 
-
 # xlsx non-derived matrix grabber (should do it only for samples)
 def load(raw):
     arr = np.empty(np.array(raw).shape)
@@ -13,16 +12,31 @@ def load(raw):
             arr[i][j] = raw[i][j].value
     return arr
 
-# grab sample factors
-CAPM_factor = ws['b3'].value
-FF3_factors = load(ws['b6':'d8'])
-MACRO_factors = load(ws['b11':'f15'])
+# grab sample thetas
+theta_CAPM = load(ws['a36':'a45'])
+theta_FF3 = load(ws['b36':'b45'])
+theta_MACRO = load(ws['c36':'c45'])
+
+# grab rf from spreadsheet
+rf = ws['b30'].value
+
+# grab R sample factors
+R_i_CAPM = theta_CAPM + rf
+R_i_FF3 = theta_FF3 + rf
+R_i_MACRO = theta_MACRO + rf
 
 # grab sample w_bar... i.e. Market Weight
 w_bar = load(ws['f19':'f28'])
 
 # grab sample w... i.e. Port. Weight
 w = load(ws['b19':'b28'])
+
+
+# grab sample factors
+CAPM_factor = ws['b3'].value
+FF3_factors = load(ws['b6':'d8'])
+MACRO_factors = load(ws['b11':'f15'])
+
 
 # grab sample beta capm, ff3 and macro
 Beta_CAPM = load(ws['o2':'o11'])
@@ -43,10 +57,6 @@ chol_vc_capm_idio = load(ws['an2':'aw11'])
 chol_vc_ff3_idio = load(ws['an14':'aw23'])
 chol_vc_macro_idio = load(ws['an26':'aw35'])
 
-# grab sample thetas
-theta_FF3 = load(ws['b36':'b45'])
-theta_CAPM = load(ws['a36':'a45'])
-theta_MACRO = load(ws['c36':'c45'])
 
 # calculate vol_mkt
 Vol_Mkt = np.sqrt(CAPM_factor)
@@ -93,4 +103,15 @@ def get_pi(sigma, idio, beta):
 pi_capm = get_pi(Sigma_CAPM_syst, chol_vc_capm_idio, b_capm)
 pi_ff3 = get_pi(Sigma_FF3_syst, chol_vc_ff3_idio, b_ff3)
 pi_macro = get_pi(Sigma_MACRO_syst, chol_vc_macro_idio, b_macro)
-print(pi_macro)
+
+# calculate tau
+def get_tau(R_i, eta, pi):
+    tau_s1 = R_i + rf
+    tau_sumproduct = sum(x*y for x, y in zip(tau_s1, w_bar))
+    tau_s2 = -1/2*np.dot(R_i.T, eta)
+    tau_s3 = -np.dot(R_i.T, pi)
+    return(tau_sumproduct + tau_s2 + tau_s3)
+
+tau_capm = get_tau(R_i_CAPM, eta_capm, pi_capm)
+tau_ff3 = get_tau(R_i_FF3, eta_ff3, pi_ff3)
+tau_macro = get_tau(R_i_MACRO, eta_macro, pi_macro)
