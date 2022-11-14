@@ -1,10 +1,5 @@
 import numpy as np
 from openpyxl import load_workbook
-from pymoo.core.problem import Problem
-from pymoo.optimize import minimize
-from pymoo.algorithms.moo.nsga2 import NSGA2
-# from pymoo.problems import get_problem
-# from pymoo.algorithms.soo.nonconvex.ga import GA
 
 wb = load_workbook("rnd.xlsx", read_only=True)
 ws = wb.active
@@ -156,8 +151,13 @@ e = np.exp
 scalar = np.ndarray.item
 
 def x_star(theta):
-    sub_lft_exp = np.dot(scalar(np.divide(1,R)),e(np.dot(np.dot(np.dot(-1/2,theta.T),T),eta)))
+    sub_lft_exp = np.dot(np.divide(1,R),e(np.dot(-T,np.dot(np.dot(1/2,theta.T),eta))))
     sub_mid_exp = np.dot(np.divide(M,R),e(np.dot(T, tau)))
     lft_exp = np.dot((scalar(np.subtract(np.add(sub_lft_exp,sub_mid_exp),1))),eta)
     rgt_exp = np.dot(scalar(sub_mid_exp),pi)
     return np.add(lft_exp,rgt_exp)
+
+x_star(theta)
+print("theta", x_star(theta))
+print("-----")
+print("theta", x_star(np.array([[0.19604544], [-0.04727182],  [0.11275486], [-0.39561893], [-0.84795428], [-0.7486316], [-0.59525459], [-0.1674108],  [-0.49205353], [-0.14884462]])))
