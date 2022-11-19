@@ -33,23 +33,19 @@ class mproblem(Problem):
     def _evaluate(self, thetas, out, *args, **kwargs):
         _, _ = args, kwargs
         res_f = []
-        # res_h = []
+        res_h = []
         res_g = []
         for theta in thetas:
             res_f.append(cwc(theta)[10])
-            # res_h.append(w-x_star(theta))
-            # res_g.append(-x_star(theta))
-            res_g.append(-cwc(theta)[0:10])
-            # x_star(theta) >= 0
-            # res_g.append(x_star(theta)-1)
-            res_g.append(cwc(theta)[0:10]-1)
-            # x_star(theta) <= 1
+            res_h.append(1-np.sum(cwc(theta)[0:10]))
+            # res_g.append(-cwc(theta)[0:10])
+            # res_g.append(cwc(theta)[0:10]-1)
         out["F"] = np.array(res_f)
-        # out["H"] = np.array(res_h)
+        out["H"] = np.array(res_h)
         out["G"] = np.array(res_g)
 
 stop_criteria = ('n_gen', 200)
-problem = mproblem(n_var=10,n_obj=1,n_eq_constr=0,n_ieq_constr=20,xl=start,xu=end)
+problem = mproblem(n_var=10,n_obj=1,n_eq_constr=1,n_ieq_constr=0,xl=start,xu=end)
 
 ref_dirs=np.array([[0.]])
 # ref_dirs = get_reference_directions("das-dennis", 10, n_partitions=3)
