@@ -31,7 +31,6 @@ w_bar = load(ws['f19':'f28'])
 # grab sample w... i.e. Port. Weight
 w = load(ws['b19':'b28'])
 
-
 # grab sample factors
 CAPM_factor = ws['b3'].value
 FF3_factors = load(ws['b6':'d8'])
@@ -146,18 +145,20 @@ eta = eta_capm
 pi = pi_capm
 R = R_CAPM
 M = M_CAPM
-T = 10
+# T = 1
 e = np.exp
 scalar = np.ndarray.item
 
 def x_star(theta):
-    sub_lft_exp = np.dot(np.divide(1,R),e(np.dot(-T,np.dot(np.dot(1/2,theta.T),eta))))
-    sub_mid_exp = np.dot(np.divide(M,R),e(np.dot(T, tau)))
-    lft_exp = np.dot((scalar(np.subtract(np.add(sub_lft_exp,sub_mid_exp),1))),eta)
-    rgt_exp = np.dot(scalar(sub_mid_exp),pi)
-    return np.add(lft_exp,rgt_exp)
+    lft_lft_exp = (1/R * e(-1/2*np.dot(theta.T,eta)))
+    lft_mid_exp = M/R * e(tau)
+    lft_exp = (lft_lft_exp + lft_mid_exp - 1) * eta
+    rgt_exp = lft_mid_exp * pi
+    return lft_exp + rgt_exp
 
-x_star(theta)
-print("theta", x_star(theta))
-print("-----")
-print("theta", x_star(np.array([[0.19604544], [-0.04727182],  [0.11275486], [-0.39561893], [-0.84795428], [-0.7486316], [-0.59525459], [-0.1674108],  [-0.49205353], [-0.14884462]])))
+def distance(x_star, w):
+    return np.sqrt((x_star[0] - w[0])**2 +(x_star[1] - w[1])**2 +(x_star[2] - w[2])**2 +(x_star[3] - w[3])**2 +(x_star[4] - w[4])**2 +(x_star[5] - w[5])**2 +(x_star[6] - w[6])**2 +(x_star[7] - w[7])**2 +(x_star[8] - w[8])**2 +(x_star[9] - w[9])**2)
+
+def cwc(theta): # has to add up to 1 <- h["G"] and each component between 0 and 1 <- h["
+    res = x_star(theta)
+    return np.append(res, distance(x_star(theta), w))
