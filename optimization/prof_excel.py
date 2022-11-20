@@ -159,6 +159,6 @@ def x_star(theta):
 def distance(x_star, w):
     return np.sqrt((x_star[0] - w[0])**2 +(x_star[1] - w[1])**2 +(x_star[2] - w[2])**2 +(x_star[3] - w[3])**2 +(x_star[4] - w[4])**2 +(x_star[5] - w[5])**2 +(x_star[6] - w[6])**2 +(x_star[7] - w[7])**2 +(x_star[8] - w[8])**2 +(x_star[9] - w[9])**2)
 
-def cwc(theta): # has to add up to 1 <- h["G"] and each component between 0 and 1 <- h["
+def cwc(theta):
     res = x_star(theta)
     return np.append(res, distance(x_star(theta), w))
