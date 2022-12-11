@@ -18,18 +18,11 @@ from pymoo.algorithms.moo.unsga3 import UNSGA3
 ################################################
 
 x_star = pe.x_star
-w = pe.w
+cwc = pe.cwc
 start = np.multiply(np.array([-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.]),1.)
 end = np.multiply(np.array([1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]),1.)
-theta=pe.theta
-w = pe.w
-cwc = pe.cwc
 
 class mproblem(Problem):
-    def _calc_pareto_front(self,*args, **kwargs):
-        _, _ = args, kwargs
-        return w
-
     def _evaluate(self, thetas, out, *args, **kwargs):
         _, _ = args, kwargs
         res_f = []

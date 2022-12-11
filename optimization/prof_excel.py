@@ -17,6 +17,9 @@ theta_CAPM = load(ws['a36':'a45'])
 theta_FF3 = load(ws['b36':'b45'])
 theta_MACRO = load(ws['c36':'c45'])
 
+# grab sample crap
+
+
 # grab rf from spreadsheet
 rf = ws['b30'].value
 
@@ -130,10 +133,13 @@ M_CAPM = get_M(R_i_CAPM)
 M_FF3 = get_M(R_i_FF3)
 M_MACRO = get_M(R_i_MACRO)
 
+# calculating choleskys
+# quit()
+
+
 # '=(EXP(-1/2*MMULT(TRANSPOSE($A$36:$A$45),$AY$2:$AY$11))*1/($B$31*$D$46)+$D$47/$D$46*EXP($BB$2)-1)*AY2'
 # calculate growth port
 # lol = np.exp(-1/2*np.dot(theta_CAPM.T, eta_capm)*1/(rf*sumproduct_capm)+(sumproduct_ff3/sumproduct_capm))*np.exp(tau_capm)-1*eta_capm[0]
-# print(lol)
 
 #######################################################################################
 # TODO optimize below
@@ -149,16 +155,69 @@ M = M_CAPM
 e = np.exp
 scalar = np.ndarray.item
 
+triangle_vector_ff3 = np.array([.0010291523,.00036629254,.000029491997,.00093611947,-.00004074656,.00058056868])
+red_triangle_ff3 = np.empty((3,3))
+
+k = 0
+for i in range(3):
+    for j in range(i, 3):
+        red_triangle_ff3[i][j] = triangle_vector_ff3[k]
+        k = k+1
+k = 0
+
+red_ff3 = np.empty((3,3))
+for i in range(3):
+    for j in range(3):
+        if (j >= i):
+            red_ff3[i][j] = red_triangle_ff3[i][j]
+        else:
+            red_ff3[i][j] = red_triangle_ff3.T[i][j]
+
+triangle_vector_macro = np.array([.00097195175,.0029957963,.00065367325,.000030493135,.00017133444,.61995941,-.24622057,-.000077991266,-.0015250082,.44684812,.0018287366,-.0035128829,.00011804626,-.00009015137,.00022741839])
+red_triangle_macro = np.empty((5,5))
+k = 0
+for i in range(5):
+    for j in range(i, 5):
+        red_triangle_macro[i][j] = triangle_vector_macro[k]
+        k = k+1
+k = 0
+
+red_macro = np.empty((5,5))
+for i in range(5):
+    for j in range(5):
+        if (j >= i):
+            red_macro[i][j] = red_triangle_macro[i][j]
+        else:
+            red_macro[i][j] = red_triangle_macro.T[i][j]
+
 def x_star(theta):
     lft_lft_exp = (1/R * e(-1/2*np.dot(theta.T,eta)))
+    print("lft_lft_exp")
+    print(lft_lft_exp)
     lft_mid_exp = M/R * e(tau)
+    print("lft_mid_exp")
+    print(lft_mid_exp)
     lft_exp = (lft_lft_exp + lft_mid_exp - 1) * eta
     rgt_exp = lft_mid_exp * pi
+    print("rgt_exp")
+    print(rgt_exp)
     return lft_exp + rgt_exp
 
+x_star(theta)
+
 def distance(x_star, w):
-    return np.sqrt((x_star[0] - w[0])**2 +(x_star[1] - w[1])**2 +(x_star[2] - w[2])**2 +(x_star[3] - w[3])**2 +(x_star[4] - w[4])**2 +(x_star[5] - w[5])**2 +(x_star[6] - w[6])**2 +(x_star[7] - w[7])**2 +(x_star[8] - w[8])**2 +(x_star[9] - w[9])**2)
+    r0 = (x_star[0] - w[0]) ** 2
+    r1 = (x_star[1] - w[1]) ** 2
+    r2 = (x_star[2] - w[2]) ** 2
+    r3 = (x_star[3] - w[3]) ** 2
+    r4 = (x_star[4] - w[4]) ** 2
+    r5 = (x_star[5] - w[5]) ** 2
+    r6 = (x_star[6] - w[6]) ** 2
+    r7 = (x_star[7] - w[7]) ** 2
+    r8 = (x_star[8] - w[8]) ** 2
+    r9 = (x_star[9] - w[9]) ** 2
+    return np.sqrt(r0 + r1 + r2 + r3 + r4 + r5 + r6 + r7 + r8 + r9)
 
 def cwc(theta):
     res = x_star(theta)
-    return np.append(res, distance(x_star(theta), w))
+    return np.append(res, distance(res, w))
