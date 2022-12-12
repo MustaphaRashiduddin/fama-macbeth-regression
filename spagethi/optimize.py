@@ -21,11 +21,11 @@ class mproblem(Problem):
         for theta in thetas:
             thetaT = np.array([theta])
             thetaT = thetaT.T
-            dinky = cwc(thetaT)
-            res_f.append(cwc(thetaT)[10])
-            res_h.append(1-np.sum(cwc(thetaT)[0:10]))
-            res_g.append(-cwc(thetaT)[0:10])
-            res_g.append(cwc(thetaT)[0:10]-1)
+            cwc_memoized = cwc(thetaT)
+            res_f.append(cwc_memoized[10])
+            res_h.append(1-np.sum(cwc_memoized[0:10]))
+            res_g.append(-cwc_memoized[0:10])
+            res_g.append(cwc_memoized[0:10]-1)
         out["F"] = np.array(res_f)
         out["H"] = np.array(res_h)
         out["G"] = np.array(res_g)
@@ -35,7 +35,7 @@ problem = mproblem(n_var=10,n_obj=1,n_eq_constr=1,n_ieq_constr=20,xl=start,xu=en
 
 ref_dirs=np.array([[0.]])
 ref_dirs = get_reference_directions("das-dennis", 1, n_partitions=150)
-algorithm = UNSGA3(ref_dirs, pop_size=10000)
+algorithm = UNSGA3(ref_dirs, pop_size=3000)
 results = minimize(problem=problem, 
                    algorithm=algorithm, 
                    termination=stop_criteria,
