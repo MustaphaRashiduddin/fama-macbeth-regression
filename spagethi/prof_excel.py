@@ -40,6 +40,17 @@ print("macro.xlsx loaded")
 T = 12
 fund_no = "63014"
 
+# mode mode mode
+global CAPM
+CAPM = "CAPM"
+global FF3
+FF3 = "FF3"
+global MACRO
+MACRO = "MACRO"
+global MODE
+MODE = CAPM
+# mode mode mode
+
 def set_date():
     global date, date_adj
     date_adj = "'" + date + "'"
