@@ -500,11 +500,11 @@ def global_grab(theta):
         CAPM_factor = grab_capm_factor(time_w_bar)
         CAPM_factor_list = grab_capm_factor_list(time_w_bar_list)
 
-        Vol_Mkt = np.sqrt(CAPM_factor)
+        Vol_Mkt_capm = np.sqrt(CAPM_factor)
 
-        Vol_Mkt_list = []
+        Vol_Mkt_capm_list = []
         for CAPM_factor in CAPM_factor_list:
-            Vol_Mkt_list.append(np.sqrt(CAPM_factor))
+            Vol_Mkt_capm_list.append(np.sqrt(CAPM_factor))
 
         FF3_factor = grab_ff3_factor(time_w_bar)
         MACRO_factor = grab_macro_factor(time_w_bar)
@@ -539,11 +539,11 @@ def global_grab(theta):
 
         # chol_vc_ff3_idio = np.linalg.cholesky(VC_FF3_idio).T
         # chol_vc_macro_idio = np.linalg.cholesky(VC_MACRO_idio).T
-        Sigma_CAPM_syst = np.dot(Beta_CAPM, Vol_Mkt)
+        Sigma_CAPM_syst = np.dot(Beta_CAPM, Vol_Mkt_capm)
 
         Sigma_CAPM_syst_list = []
-        for i in range(len(Vol_Mkt_list)):
-            Sigma_CAPM_syst_list.append(np.dot(Beta_CAPM_list[i], Vol_Mkt_list[i]))
+        for i in range(len(Vol_Mkt_capm_list)):
+            Sigma_CAPM_syst_list.append(np.dot(Beta_CAPM_list[i], Vol_Mkt_capm_list[i]))
         Sigma_CAPM_syst_list = np.array(Sigma_CAPM_syst_list)
 
         Sigma_FF3_syst = np.dot(Beta_FF3, chol_FF3_VC)
