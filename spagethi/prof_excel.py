@@ -506,10 +506,10 @@ def global_grab(theta):
         for CAPM_factor in CAPM_factor_list:
             Vol_Mkt_list.append(np.sqrt(CAPM_factor))
 
-        FF3_factors = grab_ff3_factor(time_w_bar)
-        MACRO_factors = grab_macro_factor(time_w_bar)
-        chol_FF3_VC = np.linalg.cholesky(FF3_factors).T
-        chol_MACRO_VC = np.linalg.cholesky(MACRO_factors).T
+        FF3_factor = grab_ff3_factor(time_w_bar)
+        MACRO_factor = grab_macro_factor(time_w_bar)
+        chol_FF3_VC = np.linalg.cholesky(FF3_factor).T
+        chol_MACRO_VC = np.linalg.cholesky(MACRO_factor).T
         Beta_CAPM = grab_beta_capm(time_w)
         Beta_CAPM_list = grab_beta_capm_list(time_w_list)
 
@@ -551,16 +551,14 @@ def global_grab(theta):
         Sigma_MACRO_syst = np.delete(Sigma_MACRO_syst, (5, 6, 7, 8, 9), axis=1)
         # calculating systematics
 
-        # needs to be list
         VC_CAPM_syst = np.dot(np.dot(Beta_CAPM, CAPM_factor), Beta_CAPM.T)
-
         VC_CAPM_syst_list = []
         for i in range(len(Beta_CAPM_list)):
             VC_CAPM_syst_list.append(np.dot(np.dot(Beta_CAPM_list[i], CAPM_factor_list[(len(CAPM_factor_list)-1)-i]), Beta_CAPM_list[i].T))
         VC_CAPM_syst_list = np.array(VC_CAPM_syst_list)
 
-        # VC_FF3_syst = np.dot(np.dot(Beta_FF3, FF3_factors), Beta_FF3.T)
-        # VC_MACRO_syst = np.dot(np.dot(Beta_MACRO, MACRO_factors), Beta_MACRO.T)
+        # VC_FF3_syst = np.dot(np.dot(Beta_FF3, FF3_factor), Beta_FF3.T)
+        # VC_MACRO_syst = np.dot(np.dot(Beta_MACRO, MACRO_factor), Beta_MACRO.T)
         # calculating VC
         VC_CAPM = VC_CAPM_syst + VC_CAPM_idio
 
@@ -768,9 +766,9 @@ def x_star(theta):
 
 
 # for date = 2014m1 -> 2014m12; T = 12; fund_no = "63014"
-# theta_test2 = np.array([[0.02301814, 0.03238492, 0.02421527, 0.0248188,  0.02617493, 0.02154602, 0.02242076, 0.01509845, 0.01224412, 0.02736836]])
-# theta_test2 = theta_test2.T
-# print(x_star(theta_test2))
+theta_test2 = np.array([[0.02301814, 0.03238492, 0.02421527, 0.0248188,  0.02617493, 0.02154602, 0.02242076, 0.01509845, 0.01224412, 0.02736836]])
+theta_test2 = theta_test2.T
+print(x_star(theta_test2))
 # [[0.10609662] [0.11991286] [0.001072  ] [0.05679585] [0.04062507] [0.01680532] [0.35979177] [0.16368092] [0.0115218 ] [0.12377111]]
 
 def distance(x_star, w):
