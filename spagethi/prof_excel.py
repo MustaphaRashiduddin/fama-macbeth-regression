@@ -17,7 +17,7 @@ bff3 = load_workbook(r"betas_ff3.xlsx")
 ws_bff3 = bff3.active  # get the first sheet
 print("betas_ff3.xlsx loaded")
 macro = load_workbook(r"betas_macro.xlsx")
-ws_macro = macro.active  # get the first sheet
+ws_bmacro = macro.active  # get the first sheet
 print("betas_macro.xlsx loaded")
 capm_factor = load_workbook(r"mgarch_var_cov_capm.xlsx")
 ws_capm_factor = capm_factor.active  # get the first sheet
@@ -26,7 +26,7 @@ ff3_factor = load_workbook(r"mgarch_var_cov_ff3.xlsx")
 ws_ff3_factor = ff3_factor.active  # get the first sheet
 print("mgarch_var_cov_ff3.xlsx loaded")
 macro_factor = load_workbook(r"mgarch_var_cov_macro.xlsx")
-ws_macros_factor = macro_factor.active
+ws_macro_factor = macro_factor.active
 print("mgarch_var_cov_macro.xlsx loaded")
 capm_idio = load_workbook(r"capm.xlsx")
 ws_capm_idio = capm_idio.active
@@ -37,7 +37,7 @@ print("ff3.xlsx loaded")
 macro_idio = load_workbook(r"macro.xlsx")
 ws_macro_idio = macro_idio.active
 print("macro.xlsx loaded")
-T = 12
+T = 1
 fund_no = "63014"
 
 # mode mode mode
@@ -48,7 +48,8 @@ FF3 = "FF3"
 global MACRO
 MACRO = "MACRO"
 global MODE
-MODE = CAPM
+
+MODE = MACRO
 # mode mode mode
 
 def set_date():
@@ -158,15 +159,12 @@ def grab_w(date): # so we to make this quarterly
 
 def grab_capm_factor(date):
     all_values = []
-    # if T == 2:
     for t in date:
         all_rows = []
-        betas = []
         [all_rows.append(r) for r in ws_capm_factor.iter_rows(values_only=True)]
         for i in all_rows:
             if i[0] == t:
                 all_values.append(i[1])
-    # return np.array([all_values]).T
     return all_values[0]
 
 def grab_capm_factor_list(dates):
@@ -178,72 +176,45 @@ def grab_capm_factor_list(dates):
 
 def grab_ff3_factor(date):
     all_values = []
-    # if T == 2:
     for t in date:
         all_rows = []
-        betas = []
         [all_rows.append(r) for r in ws_ff3_factor.iter_rows(values_only=True)]
         for i in all_rows:
             if i[0] == t:
-                tri_1 = i[2]
-                all_values.append(i[1:10])
-    triangle_vector_ff3 = np.array(all_values)[0]
-    red_triangle_ff3 = np.empty((3, 3))
-    k = 0
-    for i in range(3):
-        for j in range(i, 3):
-            red_triangle_ff3[i][j] = triangle_vector_ff3[k]
-            k = k + 1
-    k = 0
-    red_ff3 = np.empty((3, 3))
-    for i in range(3):
-        for j in range(3):
-            if (j >= i):
-                red_ff3[i][j] = red_triangle_ff3[i][j]
-            else:
-                red_ff3[i][j] = red_triangle_ff3.T[i][j]
-    # return np.array(all_values)
-    return red_ff3
+                all_values.append(i[1:len(i)])
+    return ult(list(all_values[0]), (3,3))
+
+def grab_ff3_factor_list(time_w_bar_list):
+    ff3_factor_list = []
+    for time_w_bar in time_w_bar_list:
+        ff3_factor_list.append(grab_ff3_factor([time_w_bar]))
+    return np.array(ff3_factor_list)
 
 def grab_macro_factor(date):
     all_values = []
-    # if T == 2:
     for t in date:
         all_rows = []
-        betas = []
-        [all_rows.append(r) for r in ws_macros_factor.iter_rows(values_only=True)]
+        [all_rows.append(r) for r in ws_macro_factor.iter_rows(values_only=True)]
         for i in all_rows:
             if i[0] == t:
-                tri_1 = i[2]
-                all_values.append(i[1:16])
-    triangle_vector_macro = np.array(all_values)[0]
-    red_triangle_macro = np.empty((5, 5))
-    k = 0
-    for i in range(5):
-        for j in range(i, 5):
-            red_triangle_macro[i][j] = triangle_vector_macro[k]
-            k = k + 1
-    k = 0
-    red_macro = np.empty((5, 5))
-    for i in range(5):
-        for j in range(5):
-            if (j >= i):
-                red_macro[i][j] = red_triangle_macro[i][j]
-            else:
-                red_macro[i][j] = red_triangle_macro.T[i][j]
-    return (red_macro)
+                all_values.append(i[1:len(i)])
+    return ult(list(all_values[0]), (5,5))
+
+
+def grab_macro_factor_list(time_w_bar_list):
+    macro_factor_list = []
+    for time_w_bar in time_w_bar_list:
+        macro_factor_list.append(grab_macro_factor([time_w_bar]))
+    return np.array(macro_factor_list)
 
 def grab_beta_capm(date):
     all_betas = []
-    # if T == 2:
     for t in date:
         all_rows = []
-        betas = []
         [all_rows.append(r) for r in ws_bcapm.iter_rows(values_only=True)]
         for i in all_rows:
             if i[0] == t:
                 for x in list(i[1:11]):
-                    # betas.append(x)
                     all_betas.append(x)
     return np.array([all_betas]).T
 
@@ -256,27 +227,67 @@ def grab_beta_capm_list(dates):
 
 def grab_beta_ff3(date):
     all_betas = []
-    # if T == 2:
     for t in date:
         all_rows = []
-        betas = []
         [all_rows.append(r) for r in ws_bff3.iter_rows(values_only=True)]
         for i in all_rows:
             if i[0] == t:
-                all_betas.append(i[1:31])
-    return np.array(all_betas)
+                for x in list(i[1:31]):
+                    all_betas.append(x)
+    arr = np.array([all_betas])
+    mat_10_3 = np.zeros((10,3))
+
+    j = 0
+    k = 0
+
+    for i in range(len(arr[0])):
+        mat_10_3[k][j] = arr[0][i]
+        if len(arr[0])/3 > k+1:
+            k = k + 1
+        else:
+            j = j + 1
+            k = 0
+
+    return mat_10_3
+
+def grab_beta_ff3_list(dates):
+    MAT = []
+    for date in dates:
+        MAT.append(grab_beta_ff3([date]))
+    MAT = np.array(MAT)
+    return MAT
 
 def grab_beta_macro(date):
     all_betas = []
-    # if T == 2:
     for t in date:
         all_rows = []
-        betas = []
-        [all_rows.append(r) for r in ws_macro.iter_rows(values_only=True)]
+        [all_rows.append(r) for r in ws_bmacro.iter_rows(values_only=True)]
         for i in all_rows:
             if i[0] == t:
-                all_betas.append(i[1:51])
-    return np.array(all_betas)
+                for x in list(i[1:51]):
+                    all_betas.append(x)
+    arr = np.array([all_betas])
+    mat_10_5 = np.zeros((10,5))
+
+    j = 0
+    k = 0
+
+    for i in range(len(arr[0])):
+        mat_10_5[k][j] = arr[0][i]
+        if len(arr[0])/5 > k+1:
+            k = k + 1
+        else:
+            j = j + 1
+            k = 0
+
+    return mat_10_5
+
+def grab_beta_macro_list(dates):
+    MAT = []
+    for date in dates:
+        MAT.append(grab_beta_macro([date]))
+    MAT = np.array(MAT)
+    return MAT
 
 def insert_dates_excel(CAPM_start, CAPM_start_year, CAPM_end_year, start_month, end_month, CAPM_end, sheet, t):
     all_months = []
@@ -313,7 +324,7 @@ def insert_dates_excel(CAPM_start, CAPM_start_year, CAPM_end_year, start_month, 
 doit = True 
 def insert_dates_excel_list(start_capm, start_year_capm, end_year_capm, start_month_capm, end_month_capm, end_year_str_capm, ws_capm_idio, time_row):
     global doit
-    doit = False 
+    doit = False
     arr = []
     for date in time_row:
         arr.append(insert_dates_excel(start_capm, start_year_capm, end_year_capm, start_month_capm, end_month_capm, end_year_str_capm, ws_capm_idio, date))
@@ -432,11 +443,11 @@ R = None#R_CAPM
 M = None#M_CAPM
 e = np.exp
 scalar = np.ndarray.item
-#
-my_date = "2014m1"
+
+my_date = "2014m12"
 date_index = 0
 time_list = np.array(increment_time(my_date, T))
-#
+
 time_row = []
 time_row.append(my_date)
 for i, t in enumerate(time_list):
@@ -448,7 +459,6 @@ global_grab_i = 0
 def global_grab(theta):
     global global_grab_i
     global_grab_i = global_grab_i + 1
-    # print(global_grab_i, "/", T)
 
     global R_T_1
     global M_T_1
@@ -463,15 +473,21 @@ def global_grab(theta):
         global chol_vc_capm_idio # required
         global chol_vc_capm_idio_list # required
         global chol_vc_ff3_idio # required
+        global chol_vc_ff3_idio_list # required
         global chol_vc_macro_idio # required
+        global chol_vc_macro_idio_list # required
         global Sigma_CAPM_syst # required
         global Sigma_CAPM_syst_list # required
         global Sigma_FF3_syst # required
+        global Sigma_FF3_syst_list # required
         global Sigma_MACRO_syst # required
+        global Sigma_MACRO_syst_list # required
         global pi_capm # required
         global pi_capm_list # required
         global pi_ff3 # required
+        global pi_ff3_list # required
         global pi_macro # required
+        global pi_macro_list # required
         global pi # required
         global w_T_1
 
@@ -499,159 +515,280 @@ def global_grab(theta):
 
         CAPM_factor = grab_capm_factor(time_w_bar)
         CAPM_factor_list = grab_capm_factor_list(time_w_bar_list)
-
         Vol_Mkt_capm = np.sqrt(CAPM_factor)
-
         Vol_Mkt_capm_list = []
         for CAPM_factor in CAPM_factor_list:
             Vol_Mkt_capm_list.append(np.sqrt(CAPM_factor))
 
         FF3_factor = grab_ff3_factor(time_w_bar)
+        FF3_factor_list = grab_ff3_factor_list(time_w_bar_list)
+        Vol_Mkt_ff3 = (np.linalg.cholesky(FF3_factor)).T
+        Vol_Mkt_ff3_list = []
+        for FF3_factor in FF3_factor_list:
+            Vol_Mkt_ff3_list.append((np.linalg.cholesky(FF3_factor)).T)
+        Vol_Mkt_ff3_list = np.array(Vol_Mkt_ff3_list)
+
         MACRO_factor = grab_macro_factor(time_w_bar)
-        chol_FF3_VC = np.linalg.cholesky(FF3_factor).T
-        chol_MACRO_VC = np.linalg.cholesky(MACRO_factor).T
+        MACRO_factor_list = grab_macro_factor_list(time_w_bar_list)
+        Vol_Mkt_macro = (np.linalg.cholesky(MACRO_factor)).T
+        Vol_Mkt_macro_list = []
+        for MACRO_factor in MACRO_factor_list:
+            Vol_Mkt_macro_list.append((np.linalg.cholesky(MACRO_factor)).T)
+        Vol_Mkt_macro_list = np.array(Vol_Mkt_macro_list)
+
         Beta_CAPM = grab_beta_capm(time_w)
         Beta_CAPM_list = grab_beta_capm_list(time_w_list)
 
         Beta_FF3 = grab_beta_ff3(time_w)
-        Beta_FF3 = Beta_FF3.reshape(3, 10)
-        Beta_FF3 = Beta_FF3.T
+        Beta_FF3_list = grab_beta_ff3_list(time_w_list)
+
         Beta_MACRO = grab_beta_macro(time_w)
-        Beta_MACRO = Beta_MACRO.reshape(5, 10)
-        Beta_MACRO = Beta_MACRO.T
+        Beta_MACRO_list = grab_beta_macro_list(time_w_list)
 
-        # this function
-        ult_input_capm = insert_dates_excel(start_capm, start_year_capm, end_year_capm, start_month_capm, end_month_capm, end_year_str_capm, ws_capm_idio,date)
+        ult_input_capm = insert_dates_excel(start_capm, start_year_capm, end_year_capm, start_month_capm, end_month_capm, end_year_str_capm, ws_capm_idio, date)
+        ult_input_ff3 = insert_dates_excel(start_ff3, start_year_ff3, end_year_ff3, start_month_ff3, end_month_ff3, end_year_str_ff3, ws_ff3_idio, date)
+        ult_input_macro = insert_dates_excel(start_macro, start_year_macro, end_year_macro, start_month_macro, end_month_macro, end_year_str_macro, ws_macro_idio, date)
+
         ult_input_capm_list = insert_dates_excel_list(start_capm, start_year_capm, end_year_capm, start_month_capm, end_month_capm, end_year_str_capm, ws_capm_idio, time_row)
-
         VC_CAPM_idio = ult(ult_input_capm, shape)
         VC_CAPM_idio_list = ult_list(ult_input_capm_list, shape)
 
-        # ult_input_ff3 = insert_dates_excel(start_ff3, start_year_ff3, end_year_ff3, start_month_ff3, end_month_ff3, end_year_str_ff3, ws_ff3_idio,date)
-        # VC_FF3_idio = ult(ult_input_ff3, shape)
-        # ult_input_macro = insert_dates_excel(start_macro, start_year_macro, end_year_macro, start_month_macro, end_month_macro, end_year_str_macro, ws_macro_idio,date)
-        # VC_MACRO_idio = ult(ult_input_macro, shape)
+        ult_input_ff3_list = insert_dates_excel_list(start_ff3, start_year_ff3, end_year_ff3, start_month_ff3, end_month_ff3, end_year_str_ff3, ws_ff3_idio, time_row)
+        VC_FF3_idio = ult(ult_input_ff3, shape)
+        VC_FF3_idio_list = ult_list(ult_input_ff3_list, shape)
+
+        ult_input_macro_list = insert_dates_excel_list(start_macro, start_year_macro, end_year_macro, start_month_macro, end_month_macro, end_year_str_macro, ws_macro_idio, time_row)
+        VC_MACRO_idio = ult(ult_input_macro, shape)
+        VC_MACRO_idio_list = ult_list(ult_input_macro_list, shape)
+
         chol_vc_capm_idio = np.linalg.cholesky(VC_CAPM_idio).T
         chol_vc_capm_idio_list = []
         for VC_CAPM_idio in VC_CAPM_idio_list:
             chol_vc_capm_idio_list.append(np.linalg.cholesky(VC_CAPM_idio).T)
         chol_vc_capm_idio_list = np.array(chol_vc_capm_idio_list)
 
-        # chol_vc_ff3_idio = np.linalg.cholesky(VC_FF3_idio).T
-        # chol_vc_macro_idio = np.linalg.cholesky(VC_MACRO_idio).T
-        Sigma_CAPM_syst = np.dot(Beta_CAPM, Vol_Mkt_capm)
+        chol_vc_ff3_idio = np.linalg.cholesky(VC_FF3_idio).T
+        chol_vc_ff3_idio_list = []
+        for VC_FF3_idio in VC_FF3_idio_list:
+            chol_vc_ff3_idio_list.append(np.linalg.cholesky(VC_FF3_idio).T)
+        chol_vc_ff3_idio_list = np.array(chol_vc_ff3_idio_list)
 
+        chol_vc_macro_idio = np.linalg.cholesky(VC_MACRO_idio).T
+        chol_vc_macro_idio_list = []
+        for VC_MACRO_idio in VC_MACRO_idio_list:
+            chol_vc_macro_idio_list.append(np.linalg.cholesky(VC_MACRO_idio).T)
+        chol_vc_macro_idio_list = np.array(chol_vc_macro_idio_list)
+
+        Sigma_CAPM_syst = np.dot(Beta_CAPM, Vol_Mkt_capm)
         Sigma_CAPM_syst_list = []
         for i in range(len(Vol_Mkt_capm_list)):
             Sigma_CAPM_syst_list.append(np.dot(Beta_CAPM_list[i], Vol_Mkt_capm_list[i]))
         Sigma_CAPM_syst_list = np.array(Sigma_CAPM_syst_list)
 
-        Sigma_FF3_syst = np.dot(Beta_FF3, chol_FF3_VC)
-        Sigma_MACRO_syst = np.dot(np.dot(Beta_MACRO, chol_MACRO_VC), Beta_MACRO.T)
+        Sigma_FF3_syst = np.dot(Beta_FF3, Vol_Mkt_ff3)
+        Sigma_FF3_syst_list = []
+        for i in range(len(Vol_Mkt_ff3_list)):
+            Sigma_FF3_syst_list.append(np.dot(Beta_FF3_list[i], Vol_Mkt_ff3_list[i]))
+        Sigma_FF3_syst_list = np.array(Sigma_FF3_syst_list)
+
+        # ask waleed bout this
+        Sigma_MACRO_syst = np.dot(np.dot(Beta_MACRO, Vol_Mkt_macro), Beta_MACRO.T)
         Sigma_MACRO_syst = np.delete(Sigma_MACRO_syst, (5, 6, 7, 8, 9), axis=1)
-        # calculating systematics
+
+        Sigma_MACRO_syst_list = []
+        for i in range(len(Vol_Mkt_macro_list)):
+            # Sigma_MACRO_syst_list.append(np.dot(Beta_MACRO_list[i], Vol_Mkt_macro_list[i]))
+            tmp = np.dot(np.dot(Beta_MACRO, Vol_Mkt_macro), Beta_MACRO.T)
+            tmp = np.delete(tmp, (5, 6, 7, 8, 9), axis=1)
+            Sigma_MACRO_syst_list.append(tmp)
+        Sigma_MACRO_syst_list = np.array(Sigma_MACRO_syst_list)
 
         VC_CAPM_syst = np.dot(np.dot(Beta_CAPM, CAPM_factor), Beta_CAPM.T)
         VC_CAPM_syst_list = []
         for i in range(len(Beta_CAPM_list)):
             VC_CAPM_syst_list.append(np.dot(np.dot(Beta_CAPM_list[i], CAPM_factor_list[(len(CAPM_factor_list)-1)-i]), Beta_CAPM_list[i].T))
         VC_CAPM_syst_list = np.array(VC_CAPM_syst_list)
-
-        # VC_FF3_syst = np.dot(np.dot(Beta_FF3, FF3_factor), Beta_FF3.T)
-        # VC_MACRO_syst = np.dot(np.dot(Beta_MACRO, MACRO_factor), Beta_MACRO.T)
-        # calculating VC
         VC_CAPM = VC_CAPM_syst + VC_CAPM_idio
-
         VC_CAPM_list = []
         for VC_CAPM_syst in VC_CAPM_syst_list:
             VC_CAPM_list.append(VC_CAPM_syst + VC_CAPM_idio)
         VC_CAPM_list = np.array(VC_CAPM_list)
-
-        # VC_FF3 = VC_FF3_syst + VC_FF3_idio
-        # VC_MACRO = VC_MACRO_syst + VC_MACRO_idio
-        # calculating b # might be a mistake here
         b_capm = np.sqrt(np.dot(np.dot(w_bar.T, VC_CAPM), w_bar))
-
         b_capm_list = []
         for i in range(len(w_bar_list)):
             b_capm_list.append(np.sqrt(np.dot(np.dot(w_bar_list[i].T, VC_CAPM_list[i]), w_bar_list[i])))
         b_capm_list = np.array(b_capm_list)
-
-        # b_ff3_0 = np.sqrt(np.dot(np.dot(w_bar.T, VC_FF3), w_bar))
-        # b_ff3 = np.array([[b_ff3_0[0][0]], [0], [0]])
-        # b_macro_0 = np.sqrt(np.dot(np.dot(w_bar.T, VC_MACRO), w_bar))
-        # b_macro = np.array([[b_macro_0[0][0]], [0], [0], [0], [0]])
-
         pi_capm = get_pi(Sigma_CAPM_syst, chol_vc_capm_idio, b_capm)
         pi_capm_list = get_pi_list(Sigma_CAPM_syst_list, chol_vc_capm_idio_list, b_capm_list)
-        pi = pi_capm
 
-        # pi_ff3 = get_pi(Sigma_FF3_syst, chol_vc_ff3_idio, b_ff3)
-        # pi_macro = get_pi(Sigma_MACRO_syst, chol_vc_macro_idio, b_macro)
+        VC_FF3_syst = np.dot(np.dot(Beta_FF3, FF3_factor), Beta_FF3.T)
+        VC_FF3_syst_list = []
+        for i in range(len(Beta_FF3_list)):
+            VC_FF3_syst_list.append(np.dot(np.dot(Beta_FF3_list[i], FF3_factor_list[(len(FF3_factor_list)-1)-i]), Beta_FF3_list[i].T))
+        VC_FF3_syst_list = np.array(VC_FF3_syst_list)
+        VC_FF3 = VC_FF3_syst + VC_FF3_idio
+        VC_FF3_list = []
+        for VC_FF3_syst in VC_FF3_syst_list:
+            VC_FF3_list.append(VC_FF3_syst + VC_FF3_idio)
+        VC_FF3_list = np.array(VC_FF3_list)
+        b_ff3 = np.sqrt(np.dot(np.dot(w_bar.T, VC_FF3), w_bar))
+        zero_matrix = np.zeros(b_ff3.shape)
+        b_ff3 = np.vstack([b_ff3, zero_matrix, zero_matrix])
+        b_ff3_list = []
+        for i in range(len(w_bar_list)):
+            # b_ff3_list.append(np.sqrt(np.dot(np.dot(w_bar_list[i].T, VC_FF3_list[i]), w_bar_list[i])))
+            b_ff3_list.append(cp.copy(b_ff3))
+        b_ff3_list = np.array(b_ff3_list)
+        pi_ff3 = get_pi(Sigma_FF3_syst, chol_vc_ff3_idio, b_ff3)
+        pi_ff3_list = get_pi_list(Sigma_FF3_syst_list, chol_vc_ff3_idio_list, b_ff3_list)
+
+        VC_MACRO_syst = np.dot(np.dot(Beta_MACRO, MACRO_factor), Beta_MACRO.T)
+        VC_MACRO_syst_list = []
+        for i in range(len(Beta_MACRO_list)):
+            VC_MACRO_syst_list.append(np.dot(np.dot(Beta_MACRO_list[i], MACRO_factor_list[(len(MACRO_factor_list)-1)-i]), Beta_MACRO_list[i].T))
+        VC_MACRO_syst_list = np.array(VC_MACRO_syst_list)
+        VC_MACRO = VC_MACRO_syst + VC_MACRO_idio
+        VC_MACRO_list = []
+        for VC_MACRO_syst in VC_MACRO_syst_list:
+            VC_MACRO_list.append(VC_MACRO_syst + VC_MACRO_idio)
+        VC_MACRO_list = np.array(VC_MACRO_list)
+        b_macro = np.sqrt(np.dot(np.dot(w_bar.T, VC_MACRO), w_bar))
+        zero_matrix = np.zeros(b_macro.shape)
+        b_macro = np.vstack([b_macro, zero_matrix, zero_matrix, zero_matrix, zero_matrix])
+        b_macro_list = []
+        for i in range(len(w_bar_list)):
+            b_macro_list.append(cp.copy(b_macro))
+        b_macro_list = np.array(b_macro_list)
+        pi_macro = get_pi(Sigma_MACRO_syst, chol_vc_macro_idio, b_macro)
+        pi_macro_list = get_pi_list(Sigma_MACRO_syst_list, chol_vc_macro_idio_list, b_macro_list)
 
         set_once = False
 
     # depending upon theta
     global rf
     rf = 0
-    R_i_CAPM = theta + rf
-    R_i_FF3 = theta + rf
-    R_i_MACRO = theta + rf
-    #VC_CAPM_idio = np.nan_to_num(VC_CAPM_idio)
-    eta_capm = get_eta(Sigma_CAPM_syst, chol_vc_capm_idio, theta)
-    eta_capm_list = get_eta_list(Sigma_CAPM_syst_list, chol_vc_capm_idio_list, theta) 
-    # eta_ff3 = get_eta(Sigma_FF3_syst, chol_vc_ff3_idio, theta)
-    # eta_macro = get_eta(Sigma_MACRO_syst, chol_vc_macro_idio, theta)
+
+    if (MODE == CAPM):
+        pi = pi_capm
+    if (MODE == FF3):
+        pi = pi_ff3
+    if (MODE == MACRO):
+        pi = pi_macro
+
+    if (MODE == CAPM):
+        global R_i_CAPM
+        R_i_CAPM = theta + rf
+    if (MODE == FF3):
+        global R_i_FF3
+        R_i_FF3 = theta + rf
+    if (MODE == MACRO):
+        global R_i_MACRO
+        R_i_MACRO = theta + rf
+
+    if MODE == CAPM:
+        global eta_capm
+        global eta_capm_list
+        eta_capm = get_eta(Sigma_CAPM_syst, chol_vc_capm_idio, theta)
+        eta_capm_list = get_eta_list(Sigma_CAPM_syst_list, chol_vc_capm_idio_list, theta) 
+    if MODE == FF3:
+        global eta_ff3
+        global eta_ff3_list
+        eta_ff3 = get_eta(Sigma_FF3_syst, chol_vc_ff3_idio, theta)
+        eta_ff3_list = get_eta_list(Sigma_FF3_syst_list, chol_vc_ff3_idio_list, theta) 
+
+    if MODE == MACRO:
+        global eta_macro
+        global eta_macro_list
+        eta_macro = get_eta(Sigma_MACRO_syst, chol_vc_macro_idio, theta)
+        eta_macro_list = get_eta_list(Sigma_MACRO_syst_list, chol_vc_macro_idio_list, theta) 
+
     global eta
-    eta = eta_capm
+    if MODE == CAPM:
+        eta = eta_capm
+    if MODE == FF3:
+        eta = eta_ff3
+    if MODE == MACRO:
+        eta = eta_macro
 
-    R_CAPM = get_R(R_i_CAPM, w)
-    R_FF3 = get_R(R_i_FF3, w)
-    R_MACRO = get_R(R_i_MACRO, w)
+    if MODE == CAPM:
+        global R_CAPM
+        R_CAPM = get_R(R_i_CAPM, w)
+    if MODE == FF3:
+        global R_FF3
+        R_FF3 = get_R(R_i_FF3, w)
+    if MODE == MACRO:
+        global R_MACRO
+        R_MACRO = get_R(R_i_MACRO, w)
+
     global R
-    R = R_CAPM
+    if MODE == CAPM:
+        R = R_CAPM
+    if MODE == FF3:
+        R = R_FF3
+    if MODE == MACRO:
+        R = R_MACRO
 
-    M_CAPM = get_M(R_i_CAPM, w_bar)
-    M_FF3 = get_M(R_i_FF3, w_bar)
-    M_MACRO = get_M(R_i_MACRO, w_bar)
+    if MODE == CAPM:
+        global M_CAPM
+        M_CAPM = get_M(R_i_CAPM, w_bar)
+    if MODE == FF3:
+        global M_FF3
+        M_FF3 = get_M(R_i_FF3, w_bar)
+    if MODE == MACRO:
+        global M_MACRO
+        M_MACRO = get_M(R_i_MACRO, w_bar)
+
     global M
-    M = M_CAPM
+    if MODE == CAPM:
+        M = M_CAPM
+    if MODE == FF3:
+        M = M_FF3
+    if MODE == MACRO:
+        M = M_MACRO
 
-    tau_capm = get_tau(R_i_CAPM, eta_capm, pi_capm, w_bar)
-    tau_capm_list = get_tau_list(R_i_CAPM, eta_capm_list, pi_capm_list, w_bar_list)
-    # tau_ff3 = get_tau(R_i_FF3, eta_ff3, pi_ff3,w_bar)
-    # tau_macro = get_tau(R_i_MACRO, eta_macro, pi_macro,w_bar)
+    if MODE == CAPM:
+        global tau_capm
+        global tau_capm_list
+        tau_capm = get_tau(R_i_CAPM, eta_capm, pi_capm, w_bar)
+        tau_capm_list = get_tau_list(R_i_CAPM, eta_capm_list, pi_capm_list, w_bar_list)
+
+    if MODE == FF3:
+        global tau_ff3
+        global tau_ff3_list
+        tau_ff3 = get_tau(R_i_FF3, eta_ff3, pi_ff3, w_bar)
+        tau_ff3_list = get_tau_list(R_i_FF3, eta_ff3_list, pi_ff3_list, w_bar_list)
+
+    if MODE == MACRO:
+        global tau_macro
+        global tau_macro_list
+        tau_macro = get_tau(R_i_MACRO, eta_macro, pi_macro, w_bar)
+        tau_macro_list = get_tau_list(R_i_MACRO, eta_macro_list, pi_macro_list, w_bar_list)
+
     global tau
-    tau = tau_capm
+    if MODE == CAPM:
+        tau = tau_capm
+    if MODE == FF3:
+        tau = tau_ff3
+    if MODE == MACRO:
+        tau = tau_macro
 
     global lv_first_integral
     global lv_second_integral
 
-    lv_first_integral = integral1(theta, eta_capm_list)
-    lv_second_integral = integral2(tau_capm_list)
+    if MODE == CAPM:
+        lv_first_integral = integral1(theta, eta_capm_list)
+        lv_second_integral = integral2(tau_capm_list)
+    if MODE == FF3:
+        lv_first_integral = integral1(theta, eta_ff3_list)
+        lv_second_integral = integral2(tau_ff3_list)
+    if MODE == MACRO:
+        lv_first_integral = integral1(theta, eta_macro_list)
+        lv_second_integral = integral2(tau_macro_list)
+
     pi_T_1 = pi
     R_T_1 = R
     M_T_1 = M
     eta_T_1 = eta
-
-    # print("eta_capm_list")
-    # print(eta_capm_list)
-
-    # print("summation of etas")
-    # print(lv_first_integral)
-
-    # print("tau_capm_list")
-    # print(tau_capm_list)
-
-    # print("summation of taus")
-    # print(lv_second_integral)
-
-    # Sigma_CAPM_syst = np.dot(Beta_CAPM, Vol_Mkt) #done
-    # Sigma_FF3_syst = np.dot(Beta_FF3, chol_FF3_VC) #done
-    # Sigma_MACRO_syst = np.dot(np.dot(Beta_MACRO, chol_MACRO_VC), Beta_MACRO.T) #done
-    # # truncated last 5 columns # TODO future observation required
-    # Sigma_MACRO_syst = np.delete(Sigma_MACRO_syst, (5, 6, 7, 8, 9), axis=1) #done
-    # return first_integral(theta, eta_capm)
 
 def integral1(theta, eta_capm_list):
     res = -1/2 * np.dot(theta.T, eta_capm_list[0])
@@ -665,99 +802,43 @@ def integral2(tau_capm_list):
         res += tau_capm_list[i]
     return res
 
-# def first_integral(theta):
-    # res = (-1/2 * np.dot(theta.T, etas[0]))
-    # for eta in etas[1:]:
-        # res += (-1/2 * np.dot(theta.T, eta))
-    # return res
-
-def update_globals_helper(theta):
-    #global_s1()
-    set_date()
-    global_grab(theta)
-
-def update_globals(d, theta):
-    global date
-    date = d
-    update_globals_helper(theta)
-
-# def first_integral_iterative(theta):
-    # res = (-1/2 * np.dot(theta.T, etas[0]))
-    # for eta in etas[1:]:
-        # res += (-1/2 * np.dot(theta.T, eta))
-    # return res
-
-# def first_integral(theta):
-    # global etas
-    # etas[global_grab_i-1] = eta
-    # return (-1/2 * np.dot(theta.T,eta))
-
-# def second_integral():
-    # return tau
-
-# etas = [0] * T
-
-# integral_summations_res2 = None
-# def initiate_once(theta): # i'll use this for both integrals
-    # # update_globals(time_row[0], theta)
-    # global_grab(theta)
-
-    # global M_T_1
-    # global R_T_1
-    # global eta_T_1
-    # global pi_T_1
-    # global lv_first_integral
-    # global lv_second_integral
-    # global w
-    # global w_T_1
-
-    # M_T_1 = M
-    # R_T_1 = R
-    # eta_T_1 = eta
-    # pi_T_1 = pi
-    # w_T_1 = w
-
-    # global date_index
-    # res1 = first_integral(theta)
-    # global integral_summations_res2
-    # integral_summations_res2 = second_integral()
-    # if len(time_row) > 1:
-        # for date in time_row[1:]:
-            # update_globals(date, theta)
-            # res1 += first_integral(theta)
-            # integral_summations_res2 += second_integral()
-    # return res1, integral_summations_res2
-
 M_T_1 = None
 R_T_1 = None
 eta_T_1 = None
-pi_T_1 = None
+pi_T_1 = None 
 w_T_1 = None
-lv_first_integral = None
-lv_second_integral = None
+lv_first_integral = None 
+lv_second_integral = None 
 set_once = True
 
 def x_star(theta):
-    # global set_once
-    # global lv_first_integral
-    # global lv_second_integral
-    # if set_once == True:
-        # lv_first_integral, lv_second_integral = initiate_once(theta)
-        # set_once = False
-    # else:
-        # lv_first_integral = first_integral_iterative(theta)
     global_grab(theta)
-
     lft_lft_exp = (1 / R_T_1 * e(lv_first_integral))
-    # print("lft_lft_exp")
-    # print(lft_lft_exp)
+    print("lft_lft_exp")
+    print(lft_lft_exp)
     lft_mid_exp = M_T_1 / R_T_1 * e(lv_second_integral)
-    # print("lft_mid_exp")
-    # print(lft_mid_exp)
+    print("lft_mid_exp")
+    print(lft_mid_exp)
+    print("M_T_1")
+    print(M_T_1)
+    print("R_T_1")
+    print(R_T_1)
+    print("tau -> lv_second_integral")
+    print(lv_second_integral)
+    print("lft_mid_exp")
+    print(lft_mid_exp)
+    print("eta_T_1")
+    print(eta_T_1)
+    print("pi_T_1")
+    print(pi_T_1)
     lft_exp = (lft_lft_exp + lft_mid_exp - 1) * eta_T_1
     rgt_exp = lft_mid_exp * pi_T_1
-    # print("rgt_exp")
-    # print(rgt_exp)
+    print("lft_exp")
+    print(lft_exp)
+    print("rgt_exp")
+    print(rgt_exp)
+    quit()
+    # print("x_star(theta_MACRO)")
     return lft_exp + rgt_exp
 
 # for date = 2014m12; T = 1; fund_no = "63014"
@@ -766,9 +847,10 @@ def x_star(theta):
 
 
 # for date = 2014m1 -> 2014m12; T = 12; fund_no = "63014"
-theta_test2 = np.array([[0.02301814, 0.03238492, 0.02421527, 0.0248188,  0.02617493, 0.02154602, 0.02242076, 0.01509845, 0.01224412, 0.02736836]])
-theta_test2 = theta_test2.T
-print(x_star(theta_test2))
+# theta_test2 = np.array([[0.02301814, 0.03238492, 0.02421527, 0.0248188,  0.02617493, 0.02154602, 0.02242076, 0.01509845, 0.01224412, 0.02736836]])
+# theta_test2 = theta_test2.T
+# print(x_star(theta_test2))
+print(x_star(theta_MACRO))
 # [[0.10609662] [0.11991286] [0.001072  ] [0.05679585] [0.04062507] [0.01680532] [0.35979177] [0.16368092] [0.0115218 ] [0.12377111]]
 
 def distance(x_star, w):

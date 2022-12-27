@@ -36,8 +36,8 @@ w = load(ws['b19':'b28'])
 
 # grab sample factors
 CAPM_factor = ws['b3'].value
-FF3_factors = load(ws['b6':'d8'])
-MACRO_factors = load(ws['b11':'f15'])
+FF3_factor = load(ws['b6':'d8'])
+MACRO_factor = load(ws['b11':'f15'])
 
 
 # grab sample beta capm, ff3 and macro
@@ -80,8 +80,8 @@ eta_macro = get_eta(Sigma_MACRO_syst, chol_vc_macro_idio, theta_MACRO)
 
 # calculating systematics
 VC_CAPM_syst = np.dot(np.dot(Beta_CAPM, CAPM_factor), Beta_CAPM.T)
-VC_FF3_syst = np.dot(np.dot(Beta_FF3, FF3_factors), Beta_FF3.T)
-VC_MACRO_syst = np.dot(np.dot(Beta_MACRO, MACRO_factors), Beta_MACRO.T)
+VC_FF3_syst = np.dot(np.dot(Beta_FF3, FF3_factor), Beta_FF3.T)
+VC_MACRO_syst = np.dot(np.dot(Beta_MACRO, MACRO_factor), Beta_MACRO.T)
 
 #calculating VC
 VC_CAPM = VC_CAPM_syst + VC_CAPM_idio
@@ -145,12 +145,12 @@ M_MACRO = get_M(R_i_MACRO)
 # TODO optimize below
 #######################################################################################
 
-theta = theta_CAPM
-tau = tau_capm
-eta = eta_capm
-pi = pi_capm
-R = R_CAPM
-M = M_CAPM
+theta = theta_MACRO
+tau = tau_macro
+eta = eta_macro
+pi = pi_macro
+R = R_MACRO
+M = M_MACRO
 # T = 1
 e = np.exp
 scalar = np.ndarray.item
@@ -190,6 +190,18 @@ for i in range(5):
         else:
             red_macro[i][j] = red_triangle_macro.T[i][j]
 
+# print("R_i_CAPM")
+# print(R_i_CAPM)
+# print("eta_capm")
+# print(eta_capm)
+# print("R_CAPM")
+# print(R_CAPM)
+# print("M_CAPM")
+# print(M_CAPM)
+# print("tau_capm")
+# print(tau_capm)
+# print("pi_capm")
+# print(pi_capm)
 def x_star(theta):
     lft_lft_exp = (1/R * e(-1/2*np.dot(theta.T,eta)))
     print("lft_lft_exp")
@@ -197,13 +209,29 @@ def x_star(theta):
     lft_mid_exp = M/R * e(tau)
     print("lft_mid_exp")
     print(lft_mid_exp)
+    print("M")
+    print(M)
+    print("R")
+    print(R)
+    print("tau")
+    print(tau)
+    print("lft_mid_exp")
+    print(lft_mid_exp)
+    print("eta")
+    print(eta)
+    print("pi")
+    print(pi)
     lft_exp = (lft_lft_exp + lft_mid_exp - 1) * eta
     rgt_exp = lft_mid_exp * pi
+    print("lft_exp")
+    print(lft_exp)
     print("rgt_exp")
     print(rgt_exp)
+    quit()
+    print("x_star(theta_MACRO)")
     return lft_exp + rgt_exp
 
-x_star(theta)
+print(x_star(theta_MACRO))
 
 def distance(x_star, w):
     r0 = (x_star[0] - w[0]) ** 2

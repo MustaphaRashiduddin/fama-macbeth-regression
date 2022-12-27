@@ -35,7 +35,7 @@ problem = mproblem(n_var=10,n_obj=1,n_eq_constr=1,n_ieq_constr=20,xl=start,xu=en
 
 ref_dirs=np.array([[0.]])
 ref_dirs = get_reference_directions("das-dennis", 1, n_partitions=150)
-algorithm = UNSGA3(ref_dirs, pop_size=3000)
+algorithm = UNSGA3(ref_dirs, pop_size=25000)
 results = minimize(problem=problem, 
                    algorithm=algorithm, 
                    termination=stop_criteria,
