@@ -190,18 +190,6 @@ for i in range(5):
         else:
             red_macro[i][j] = red_triangle_macro.T[i][j]
 
-# print("R_i_CAPM")
-# print(R_i_CAPM)
-# print("eta_capm")
-# print(eta_capm)
-# print("R_CAPM")
-# print(R_CAPM)
-# print("M_CAPM")
-# print(M_CAPM)
-# print("tau_capm")
-# print(tau_capm)
-# print("pi_capm")
-# print(pi_capm)
 def x_star(theta):
     lft_lft_exp = (1/R * e(-1/2*np.dot(theta.T,eta)))
     print("lft_lft_exp")

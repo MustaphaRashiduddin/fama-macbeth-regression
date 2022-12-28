@@ -37,9 +37,13 @@ print("ff3.xlsx loaded")
 macro_idio = load_workbook(r"macro.xlsx")
 ws_macro_idio = macro_idio.active
 print("macro.xlsx loaded")
-T = 1
-fund_no = "63014"
 
+T = 1
+print("T =", T)
+my_date = "2014m12"
+print("start date =", my_date)
+fund_no = "63014"
+print("fund_no =", fund_no)
 # mode mode mode
 global CAPM
 CAPM = "CAPM"
@@ -50,6 +54,7 @@ MACRO = "MACRO"
 global MODE
 
 MODE = MACRO
+print("MODE =", MODE)
 # mode mode mode
 
 def set_date():
@@ -444,7 +449,6 @@ M = None#M_CAPM
 e = np.exp
 scalar = np.ndarray.item
 
-my_date = "2014m12"
 date_index = 0
 time_list = np.array(increment_time(my_date, T))
 
@@ -597,8 +601,7 @@ def global_grab(theta):
 
         Sigma_MACRO_syst_list = []
         for i in range(len(Vol_Mkt_macro_list)):
-            # Sigma_MACRO_syst_list.append(np.dot(Beta_MACRO_list[i], Vol_Mkt_macro_list[i]))
-            tmp = np.dot(np.dot(Beta_MACRO, Vol_Mkt_macro), Beta_MACRO.T)
+            tmp = np.dot(np.dot(Beta_MACRO_list[i], Vol_Mkt_macro_list[i]), Beta_MACRO_list[i].T)
             tmp = np.delete(tmp, (5, 6, 7, 8, 9), axis=1)
             Sigma_MACRO_syst_list.append(tmp)
         Sigma_MACRO_syst_list = np.array(Sigma_MACRO_syst_list)
@@ -606,12 +609,13 @@ def global_grab(theta):
         VC_CAPM_syst = np.dot(np.dot(Beta_CAPM, CAPM_factor), Beta_CAPM.T)
         VC_CAPM_syst_list = []
         for i in range(len(Beta_CAPM_list)):
-            VC_CAPM_syst_list.append(np.dot(np.dot(Beta_CAPM_list[i], CAPM_factor_list[(len(CAPM_factor_list)-1)-i]), Beta_CAPM_list[i].T))
+            # VC_CAPM_syst_list.append(np.dot(np.dot(Beta_CAPM_list[i], CAPM_factor_list[(len(CAPM_factor_list)-1)-i]), Beta_CAPM_list[i].T))
+            VC_CAPM_syst_list.append(np.dot(np.dot(Beta_CAPM_list[i], CAPM_factor_list[i]), Beta_CAPM_list[i].T))
         VC_CAPM_syst_list = np.array(VC_CAPM_syst_list)
         VC_CAPM = VC_CAPM_syst + VC_CAPM_idio
         VC_CAPM_list = []
-        for VC_CAPM_syst in VC_CAPM_syst_list:
-            VC_CAPM_list.append(VC_CAPM_syst + VC_CAPM_idio)
+        for i in range(len(VC_CAPM_syst_list)):
+            VC_CAPM_list.append(VC_CAPM_syst_list[i] + VC_CAPM_idio_list[i])
         VC_CAPM_list = np.array(VC_CAPM_list)
         b_capm = np.sqrt(np.dot(np.dot(w_bar.T, VC_CAPM), w_bar))
         b_capm_list = []
@@ -624,40 +628,47 @@ def global_grab(theta):
         VC_FF3_syst = np.dot(np.dot(Beta_FF3, FF3_factor), Beta_FF3.T)
         VC_FF3_syst_list = []
         for i in range(len(Beta_FF3_list)):
-            VC_FF3_syst_list.append(np.dot(np.dot(Beta_FF3_list[i], FF3_factor_list[(len(FF3_factor_list)-1)-i]), Beta_FF3_list[i].T))
+            # VC_FF3_syst_list.append(np.dot(np.dot(Beta_FF3_list[i], FF3_factor_list[(len(FF3_factor_list)-1)-i]), Beta_FF3_list[i].T))
+            VC_FF3_syst_list.append(np.dot(np.dot(Beta_FF3_list[i], FF3_factor_list[i]), Beta_FF3_list[i].T))
         VC_FF3_syst_list = np.array(VC_FF3_syst_list)
         VC_FF3 = VC_FF3_syst + VC_FF3_idio
         VC_FF3_list = []
-        for VC_FF3_syst in VC_FF3_syst_list:
-            VC_FF3_list.append(VC_FF3_syst + VC_FF3_idio)
+        for i in range(len(VC_FF3_syst_list)):
+            VC_FF3_list.append(VC_FF3_syst_list[i] + VC_FF3_idio_list[i])
         VC_FF3_list = np.array(VC_FF3_list)
         b_ff3 = np.sqrt(np.dot(np.dot(w_bar.T, VC_FF3), w_bar))
         zero_matrix = np.zeros(b_ff3.shape)
         b_ff3 = np.vstack([b_ff3, zero_matrix, zero_matrix])
         b_ff3_list = []
         for i in range(len(w_bar_list)):
-            # b_ff3_list.append(np.sqrt(np.dot(np.dot(w_bar_list[i].T, VC_FF3_list[i]), w_bar_list[i])))
-            b_ff3_list.append(cp.copy(b_ff3))
+            tmp_ff3 = np.sqrt(np.dot(np.dot(w_bar_list[i].T, VC_FF3_list[i]), w_bar_list[i]))
+            tmp_ff3 = np.vstack([tmp_ff3, zero_matrix, zero_matrix])
+            b_ff3_list.append(cp.copy(tmp_ff3))
         b_ff3_list = np.array(b_ff3_list)
         pi_ff3 = get_pi(Sigma_FF3_syst, chol_vc_ff3_idio, b_ff3)
         pi_ff3_list = get_pi_list(Sigma_FF3_syst_list, chol_vc_ff3_idio_list, b_ff3_list)
+        # b_ff3_list x
 
         VC_MACRO_syst = np.dot(np.dot(Beta_MACRO, MACRO_factor), Beta_MACRO.T)
         VC_MACRO_syst_list = []
         for i in range(len(Beta_MACRO_list)):
-            VC_MACRO_syst_list.append(np.dot(np.dot(Beta_MACRO_list[i], MACRO_factor_list[(len(MACRO_factor_list)-1)-i]), Beta_MACRO_list[i].T))
+            # VC_MACRO_syst_list.append(np.dot(np.dot(Beta_MACRO_list[i], MACRO_factor_list[(len(MACRO_factor_list)-1)-i]), Beta_MACRO_list[i].T))
+            VC_MACRO_syst_list.append(np.dot(np.dot(Beta_MACRO_list[i], MACRO_factor_list[i]), Beta_MACRO_list[i].T))
+            # MACRO_factor_list ok; Beta_MACRO_list ok;
         VC_MACRO_syst_list = np.array(VC_MACRO_syst_list)
         VC_MACRO = VC_MACRO_syst + VC_MACRO_idio
         VC_MACRO_list = []
-        for VC_MACRO_syst in VC_MACRO_syst_list:
-            VC_MACRO_list.append(VC_MACRO_syst + VC_MACRO_idio)
+        for i in range(len(VC_MACRO_syst_list)):
+            VC_MACRO_list.append(VC_MACRO_syst_list[i] + VC_MACRO_idio_list[i])
         VC_MACRO_list = np.array(VC_MACRO_list)
         b_macro = np.sqrt(np.dot(np.dot(w_bar.T, VC_MACRO), w_bar))
         zero_matrix = np.zeros(b_macro.shape)
         b_macro = np.vstack([b_macro, zero_matrix, zero_matrix, zero_matrix, zero_matrix])
         b_macro_list = []
         for i in range(len(w_bar_list)):
-            b_macro_list.append(cp.copy(b_macro))
+            tmp_macro = np.sqrt(np.dot(np.dot(w_bar_list[i].T, VC_MACRO_list[i]), w_bar_list[i]))
+            tmp_macro = np.vstack([tmp_macro, zero_matrix, zero_matrix, zero_matrix, zero_matrix])
+            b_macro_list.append(cp.copy(tmp_macro))
         b_macro_list = np.array(b_macro_list)
         pi_macro = get_pi(Sigma_MACRO_syst, chol_vc_macro_idio, b_macro)
         pi_macro_list = get_pi_list(Sigma_MACRO_syst_list, chol_vc_macro_idio_list, b_macro_list)
@@ -695,7 +706,6 @@ def global_grab(theta):
         global eta_ff3_list
         eta_ff3 = get_eta(Sigma_FF3_syst, chol_vc_ff3_idio, theta)
         eta_ff3_list = get_eta_list(Sigma_FF3_syst_list, chol_vc_ff3_idio_list, theta) 
-
     if MODE == MACRO:
         global eta_macro
         global eta_macro_list
@@ -757,6 +767,7 @@ def global_grab(theta):
         global tau_ff3_list
         tau_ff3 = get_tau(R_i_FF3, eta_ff3, pi_ff3, w_bar)
         tau_ff3_list = get_tau_list(R_i_FF3, eta_ff3_list, pi_ff3_list, w_bar_list)
+        # eta_ff3_list ok; pi_ff3_list x;
 
     if MODE == MACRO:
         global tau_macro
@@ -814,43 +825,48 @@ set_once = True
 def x_star(theta):
     global_grab(theta)
     lft_lft_exp = (1 / R_T_1 * e(lv_first_integral))
-    print("lft_lft_exp")
-    print(lft_lft_exp)
+    # print("lft_lft_exp")
+    # print(lft_lft_exp)
     lft_mid_exp = M_T_1 / R_T_1 * e(lv_second_integral)
-    print("lft_mid_exp")
-    print(lft_mid_exp)
-    print("M_T_1")
-    print(M_T_1)
-    print("R_T_1")
-    print(R_T_1)
-    print("tau -> lv_second_integral")
-    print(lv_second_integral)
-    print("lft_mid_exp")
-    print(lft_mid_exp)
-    print("eta_T_1")
-    print(eta_T_1)
-    print("pi_T_1")
-    print(pi_T_1)
+    # print("lft_mid_exp")
+    # print(lft_mid_exp)
+    # print("M_T_1")
+    # print(M_T_1)
+    # print("R_T_1")
+    # print(R_T_1)
+    # print("tau -> lv_second_integral")
+    # print(lv_second_integral)
+    # print("lft_mid_exp")
+    # print(lft_mid_exp)
+    # print("eta_T_1")
+    # print(eta_T_1)
+    # print("pi_T_1")
+    # print(pi_T_1)
     lft_exp = (lft_lft_exp + lft_mid_exp - 1) * eta_T_1
     rgt_exp = lft_mid_exp * pi_T_1
-    print("lft_exp")
-    print(lft_exp)
-    print("rgt_exp")
-    print(rgt_exp)
-    quit()
+    # print("lft_exp")
+    # print(lft_exp)
+    # print("rgt_exp")
+    # print(rgt_exp)
+    # quit()
     # print("x_star(theta_MACRO)")
     return lft_exp + rgt_exp
 
 # for date = 2014m12; T = 1; fund_no = "63014"
 # theta_test = np.array([[0.07255292, 0.08408584, 0.06552885, 0.06671856, 0.07544954, 0.0596966, 0.07516593, 0.01340695, 0.04415142, 0.06795616]])
-# theta_test = theta_test.T
+theta_test = np.array([[0.11012354, 0.13017151, 0.10203563, 0.11835238, 0.13837704, 0.1188936, 0.10596325, 0.08390391, 0.07149853, 0.12371767]])
+theta_test = theta_test.T
+print(x_star(theta_test))
+print(np.sum(x_star(theta_test)))
 
 
 # for date = 2014m1 -> 2014m12; T = 12; fund_no = "63014"
 # theta_test2 = np.array([[0.02301814, 0.03238492, 0.02421527, 0.0248188,  0.02617493, 0.02154602, 0.02242076, 0.01509845, 0.01224412, 0.02736836]])
 # theta_test2 = theta_test2.T
 # print(x_star(theta_test2))
-print(x_star(theta_MACRO))
+
+# print(x_star(theta_MACRO))
+
 # [[0.10609662] [0.11991286] [0.001072  ] [0.05679585] [0.04062507] [0.01680532] [0.35979177] [0.16368092] [0.0115218 ] [0.12377111]]
 
 def distance(x_star, w):
